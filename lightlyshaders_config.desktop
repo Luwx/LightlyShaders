@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Service
+X-KDE-ServiceTypes=KCModule
+
+X-KDE-Library=kwin4_lightlyshaders_config
+X-KDE-ParentComponents=kwin4_effect_lightlyshaders
+X-KDE-PluginKeyword=lightlyshaders
+
+Name=LightlyShaders
