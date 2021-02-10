@@ -196,7 +196,11 @@ LightlyShadersEffect::reconfigure(ReconfigureFlags flags)
 }
 
 void
-LightlyShadersEffect::prePaintWindow(KWin::EffectWindow *w, KWin::WindowPrePaintData &data, int time)
+#if KWIN_EFFECT_API_VERSION >= 232
+LightlyShadersEffect::prePaintWindow(KWin::EffectWindow* w, KWin::WindowPrePaintData &data, std::chrono::milliseconds time)
+#else
+LightlyShadersEffect::prePaintWindow(KWin::EffectWindow* w, KWin::WindowPrePaintData &data, int time)
+#endif
 {
     if (!m_shader->isValid()
             || !m_managed.contains(w)
