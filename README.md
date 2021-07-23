@@ -1,5 +1,11 @@
  ![default](https://github.com/Luwx/LightlyShaders/blob/master/screenshot.png)
- This is a fork of [ShapeCorners](https://sourceforge.net/projects/shapecorners/) that additionally implements an outline around the window.
+ This is a fork of [ShapeCorners](https://sourceforge.net/projects/shapecorners/) KWin effect that additionally implements an outline around the window.
+ 
+ # warning
+ - This effect may cause a heavy performance impact
+ - This effect can be affected by this KWin bug: https://bugs.kde.org/show_bug.cgi?id=395725
+ - Aurorae decoration themes are not compatible
+ - The decoration border/shadow and the effect must have the same corner radius
  
  # Dependencies:
  
