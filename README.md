@@ -2,6 +2,7 @@
  This is a fork of [ShapeCorners](https://sourceforge.net/projects/shapecorners/) KWin effect that additionally implements an outline around the window.
  
  # warning
+ - ### **This effect is not compatible with KDE Plasma 5.23 and onwards.**
  - This effect may cause a heavy performance impact
  - This effect can be affected by this KWin bug: https://bugs.kde.org/show_bug.cgi?id=395725
  - Aurorae decoration themes are not compatible
