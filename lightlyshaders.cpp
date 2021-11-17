@@ -206,8 +206,11 @@ LightlyShadersEffect::prePaintWindow(KWin::EffectWindow* w, KWin::WindowPrePaint
             || !m_managed.contains(w)
             || !w->isPaintingEnabled()
 //            || KWin::effects->hasActiveFullScreenEffect()
-            || w->isDesktop()
-            || data.quads.isTransformed())
+			|| w->isDesktop()
+		#if KWIN_EFFECT_API_VERSION < 233
+				   || data.quads.isTransformed()
+		#endif
+			)
     {
         KWin::effects->prePaintWindow(w, data, time);
         return;
@@ -232,13 +235,15 @@ LightlyShadersEffect::prePaintWindow(KWin::EffectWindow* w, KWin::WindowPrePaint
     KWin::effects->prePaintWindow(w, data, time);
 }
 
+#if KWIN_EFFECT_API_VERSION < 233
 static bool hasShadow(KWin::WindowQuadList &qds)
 {
-    for (int i = 0; i < qds.count(); ++i)
-        if (qds.at(i).type() == KWin::WindowQuadShadow)
-            return true;
-    return false;
+	for (int i = 0; i < qds.count(); ++i)
+		if (qds.at(i).type() == KWin::WindowQuadShadow)
+			return true;
+	return false;
 }
+#endif
 
 void
 LightlyShadersEffect::paintWindow(KWin::EffectWindow *w, int mask, QRegion region, KWin::WindowPaintData &data)
@@ -247,10 +252,14 @@ LightlyShadersEffect::paintWindow(KWin::EffectWindow *w, int mask, QRegion regio
             || !m_managed.contains(w)
             || !w->isPaintingEnabled()
 //            || KWin::effects->hasActiveFullScreenEffect()
-            || w->isDesktop()
-            || data.quads.isTransformed()
-            || (mask & (PAINT_WINDOW_TRANSFORMED|PAINT_SCREEN_WITH_TRANSFORMED_WINDOWS))
-            || !hasShadow(data.quads))
+			|| w->isDesktop()
+			|| w->windowClass().contains("lattedock", Qt::CaseInsensitive)
+		#if KWIN_EFFECT_API_VERSION < 233
+					|| data.quads.isTransformed()
+					|| !hasShadow(data.quads)
+		#endif
+			|| (mask & (PAINT_WINDOW_TRANSFORMED|PAINT_SCREEN_WITH_TRANSFORMED_WINDOWS))
+			)
     {
         KWin::effects->paintWindow(w, mask, region, data);
         return;
@@ -266,24 +275,29 @@ LightlyShadersEffect::paintWindow(KWin::EffectWindow *w, int mask, QRegion regio
         QRect(geo.bottomLeft()-QPoint(0, m_size-1), m_corner)
     };
 
-    const KWin::WindowQuadList qds(data.quads);
-    //paint the shadow
-    data.quads = qds.select(KWin::WindowQuadShadow);
-    KWin::effects->paintWindow(w, mask, region, data);
+#if KWIN_EFFECT_API_VERSION < 233
+	const KWin::WindowQuadList qds(data.quads);
+	//paint the shadow
+	data.quads = qds.select(KWin::WindowQuadShadow);
+	KWin::effects->paintWindow(w, mask, region, data);
+#endif
 
-    //copy the corner regions
-    KWin::GLTexture tex[NTex];
-    const QRect s(KWin::effects->virtualScreenGeometry());
-    for (int i = 0; i < NTex; ++i)
-    {
-        tex[i] = KWin::GLTexture(GL_RGBA8, rect[i].size());
-        tex[i].bind();
-        glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, rect[i].x(), s.height() - rect[i].y() - rect[i].height(), rect[i].width(), rect[i].height());
-        tex[i].unbind();
-    }
+	//copy the corner regions
+	QList<KWin::GLTexture> tex;
+	const QRect s(KWin::effects->virtualScreenGeometry());
+	for (int i = 0; i < NTex; ++i)
+	{
+		KWin::GLTexture t = KWin::GLTexture(GL_RGBA8, rect[i].size());
+		t.bind();
+		glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, rect[i].x(), s.height() - rect[i].y() - rect[i].height(), rect[i].width(), rect[i].height());
+		t.unbind();
+		tex.append(t);
+	}
 
-    //paint the actual window
-    data.quads = qds.filterOut(KWin::WindowQuadShadow);
+	//paint the actual window
+#if KWIN_EFFECT_API_VERSION < 233
+	data.quads = qds.filterOut(KWin::WindowQuadShadow);
+#endif
     KWin::effects->paintWindow(w, mask, region, data);
 
     //'shape' the corners
@@ -305,8 +319,10 @@ LightlyShadersEffect::paintWindow(KWin::EffectWindow *w, int mask, QRegion regio
         tex[i].unbind();
         m_tex[3-i]->unbind();
     }
-    sm->popShader();
-    data.quads = qds;
+	sm->popShader();
+#if KWIN_EFFECT_API_VERSION < 233
+	data.quads = qds;
+#endif
 
     // outline
     if (m_outline && data.brightness() == 1.0 && data.crossFadeProgress() == 1.0)
